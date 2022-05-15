@@ -8,6 +8,7 @@
 
 // Define the ADC channel used
 #define ADC1_EXAMPLE_CHAN0          ADC1_CHANNEL_6
+#define ADC2_EXAMPLE_CHAN0          ADC1_CHANNEL_7
 
 // Define the GPIO used for the LED
 #define ADC_EXAMPLE_ATTEN           ADC_ATTEN_DB_11
@@ -60,11 +61,13 @@ void readADCCore1(void *pvParameter)
     ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_DEFAULT));
     ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_EXAMPLE_CHAN0, ADC_EXAMPLE_ATTEN));
 
+    ESP_ERROR_CHECK(adc1_config_channel_atten(ADC2_EXAMPLE_CHAN0, ADC_EXAMPLE_ATTEN));
+
     while(true)
     {
-        adc_raw_value = adc1_get_raw(ADC1_EXAMPLE_CHAN0);
+        adc_raw_value = adc1_get_raw(ADC1_EXAMPLE_CHAN0) / 256 * (adc1_get_raw(ADC2_EXAMPLE_CHAN0) / 16);
 
-        PWMDutyValue = (int)(adc_raw_value - 2048) / 4 + 150;
+        PWMDutyValue = (int)(adc_raw_value) >> 4;
     }
 }
 
