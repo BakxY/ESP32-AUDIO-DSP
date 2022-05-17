@@ -14,16 +14,16 @@
 #define ADC_EXAMPLE_ATTEN           ADC_ATTEN_DB_11
 
 // Define the resolution of the ADC
-#define LEDC_DUTY_RES           LEDC_TIMER_8_BIT
+#define LEDC_DUTY_RES               LEDC_TIMER_8_BIT
 
 // Define the frequency of the LEDC timer
-#define LEDC_FREQUENCY          (250000)
+#define LEDC_FREQUENCY              250000
 
 // Initialize a variable to store the pwm duty value
 int PWMDutyValue = 0;
 
 // This is the function that will run on core 0 to write the pwm
-void writePWMCore0(void *pvParameter)
+void writePWM(void *pvParameter)
 {
     // Create the config for the ledc timer
     ledc_timer_config_t ledc_timer = {
@@ -49,12 +49,13 @@ void writePWMCore0(void *pvParameter)
     
     while(true)
     {
+        // Write and update the duty value
         ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, PWMDutyValue);
         ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0);
     }
 }
 
-void readADCCore1(void *pvParameter)
+void readADC(void *pvParameter)
 {
     int adc_raw_value = 0;
 
@@ -73,6 +74,6 @@ void readADCCore1(void *pvParameter)
 
 void app_main(void)
 {
-    xTaskCreate(&readADCCore1, "core1_task", 1024 * 4, NULL, configMAX_PRIORITIES - 1, NULL);
-    xTaskCreatePinnedToCore(&writePWMCore0, "core0_task", 1024 * 4, NULL, configMAX_PRIORITIES - 1, NULL, 1);
+    xTaskCreate(&readADC, "readADC", 1024 * 4, NULL, configMAX_PRIORITIES - 1, NULL);
+    xTaskCreatePinnedToCore(&writePWM, "writePWM", 1024 * 4, NULL, configMAX_PRIORITIES - 1, NULL, 1);
 }
