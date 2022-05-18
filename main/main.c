@@ -7,11 +7,11 @@
 #include "driver/ledc.h"
 
 // Define the ADC channel used
-#define ADC1_EXAMPLE_CHAN0          ADC1_CHANNEL_6
-#define ADC2_EXAMPLE_CHAN0          ADC1_CHANNEL_7
+#define ADC_CHANNEL_1               ADC1_CHANNEL_6
+#define ADC_CHANNEL_2               ADC1_CHANNEL_7
 
 // Define the GPIO used for the LED
-#define ADC_EXAMPLE_ATTEN           ADC_ATTEN_DB_11
+#define ADC_ATTEN                   ADC_ATTEN_DB_11
 
 // Define the resolution of the ADC
 #define LEDC_DUTY_RES               LEDC_TIMER_8_BIT
@@ -59,21 +59,27 @@ void readADC(void *pvParameter)
 {
     int adc_raw_value = 0;
 
+    // setup the adc with the default values
     ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_DEFAULT));
-    ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_EXAMPLE_CHAN0, ADC_EXAMPLE_ATTEN));
 
-    ESP_ERROR_CHECK(adc1_config_channel_atten(ADC2_EXAMPLE_CHAN0, ADC_EXAMPLE_ATTEN));
+    // setup the adc channel with the set adc attenuation
+    ESP_ERROR_CHECK(adc1_config_channel_atten(ADC_CHANNEL_1, ADC_ATTEN));
+    ESP_ERROR_CHECK(adc1_config_channel_atten(ADC_CHANNEL_2, ADC_ATTEN));
 
     while(true)
     {
-        adc_raw_value = adc1_get_raw(ADC1_EXAMPLE_CHAN0) / 256 * (adc1_get_raw(ADC2_EXAMPLE_CHAN0) / 16);
+        // read all adc values and calculate the end signal
+        adc_raw_value = adc1_get_raw(ADC_CHANNEL_1) / 256 * (adc1_get_raw(ADC_CHANNEL_2) / 16);
 
+        // shift the value by 4 bits to convert from 12 bit to 8 bit, LSB's are ignored
         PWMDutyValue = (int)(adc_raw_value) >> 4;
     }
 }
 
+// main entry point
 void app_main(void)
 {
+    // create and start the tasks
     xTaskCreate(&readADC, "readADC", 1024 * 4, NULL, configMAX_PRIORITIES - 1, NULL);
     xTaskCreatePinnedToCore(&writePWM, "writePWM", 1024 * 4, NULL, configMAX_PRIORITIES - 1, NULL, 1);
 }
